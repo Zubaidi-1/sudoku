@@ -1,6 +1,6 @@
 export default function Modes({ modes, setModes }) {
-  const activeClass = "text-[#0077b6]";
-  const inactiveClass = " text-white";
+  const activeClass = "text-[#b91d2e]";
+  const inactiveClass = " text-[#432818]";
 
   const baseClass = "px-4 py-2 border rounded transition";
 

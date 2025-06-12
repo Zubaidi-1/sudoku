@@ -19,6 +19,16 @@ export default function Grid9({
     structuredClone(unsolvedGrid)
   );
 
+  // Reset filledGrid when mode changes or a new unsolvedGrid comes in
+  useEffect(() => {
+    setFilledGrid(structuredClone(unsolvedGrid));
+    setMistakesCount(0);
+    setTime(0);
+    setOpened(false);
+    setGameWon(false);
+    setIsActive(true);
+  }, [unsolvedGrid, mode]);
+
   // Timer effect
   useEffect(() => {
     let interval = null;
@@ -44,30 +54,23 @@ export default function Grid9({
       for (let i = 0; i < 9; i++) {
         for (let j = 0; j < 9; j++) {
           if (unsolvedGrid[i][j] !== undefined) continue;
-
           const userVal = filledGrid[i][j];
           const correctVal = grid[i][j];
-
           if (userVal === undefined || userVal !== correctVal) {
-            console.log(`Mismatch at [${i}][${j}]:`, userVal, "!=", correctVal);
             return false;
           }
         }
       }
-
       return true;
     };
 
     if (checkWinCondition()) {
       setIsActive(false);
-      setNewGame((prev) => {
-        return !prev;
-      });
+      setNewGame((prev) => !prev);
       setGameWon(true);
     }
   }, [filledGrid, grid, unsolvedGrid]);
 
-  // Format time as MM:SS
   const formatTime = () => {
     const minutes = Math.floor(time / 60);
     const seconds = time % 60;
@@ -76,26 +79,22 @@ export default function Grid9({
       .padStart(2, "0")}`;
   };
 
-  // Handle input in a cell
   const handleCellChange = (rowIndex, colIndex, value) => {
     const newFilledGrid = structuredClone(filledGrid);
     const numValue = value === "" ? undefined : Number(value);
 
-    // Ignore invalid numbers
     if (numValue !== undefined && (numValue < 1 || numValue > 9)) return;
 
     if (newFilledGrid[rowIndex][colIndex] !== numValue) {
       newFilledGrid[rowIndex][colIndex] = numValue;
       setFilledGrid(newFilledGrid);
 
-      // Mistake check
       if (numValue !== undefined && numValue !== grid[rowIndex][colIndex]) {
         setMistakesCount((prev) => prev + 1);
       }
     }
   };
 
-  // Restart the game
   const handleRestart = () => {
     setTime(0);
     setMistakesCount(0);
@@ -107,7 +106,6 @@ export default function Grid9({
 
   return (
     <div className="flex flex-col items-center">
-      {/* Game stats header */}
       <div className="flex justify-between w-full mb-4 px-4">
         <div className="text-lg font-medium">
           Time: <span className="font-bold">{formatTime()}</span>
@@ -117,7 +115,6 @@ export default function Grid9({
         </div>
       </div>
 
-      {/* Game grid */}
       {opened ? (
         <GameEnd
           setOpened={setOpened}
@@ -146,7 +143,7 @@ export default function Grid9({
                   mistakesCount={mistakesCount}
                   placement={placement}
                   solved={grid[rowIndex]}
-                  values={row}
+                  values={filledGrid[rowIndex]}
                   third={isThirdRow}
                   onCellChange={(colIndex, value) =>
                     handleCellChange(rowIndex, colIndex, value)
