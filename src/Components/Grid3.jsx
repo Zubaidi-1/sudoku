@@ -49,7 +49,7 @@ export default function Grid3({
                   value === correctValue
                     ? "text-[#c3903f]"
                     : value !== undefined
-                    ? "text-[#]"
+                    ? "text-red-500"
                     : ""
                 }`}
                 maxLength={1}
