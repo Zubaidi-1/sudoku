@@ -21,7 +21,7 @@ export default function Grid3({
   }
 
   return (
-    <div className={`flex ${border} border-[#ffe6a7] text-2xl`}>
+    <div className={`flex ${border} border-[#000] text-2xl`}>
       {values.map((value, index) => {
         const isPrefilled = initialGrid[index] !== undefined;
         const correctValue = solved[index];
@@ -29,17 +29,17 @@ export default function Grid3({
         return (
           <div
             key={index}
-            className="border-r-2 border-b-2 border-gray-500 p-2 w-[60px] h-[60px] flex items-center justify-center transition hover:bg-black"
+            className="border-r-2 border-b-2 border-gray-500 p-2 w-[60px] h-[60px] flex items-center bg-white justify-center transition hover:bg-[#c3903f]"
             style={{
               borderRight: [2, 5, 8].includes(index)
                 ? "none"
                 : "2px solid gray",
-              borderLeft: index % 3 === 0 ? "4px solid #ffe6a7" : "none",
+              borderLeft: index % 3 === 0 ? "4px solid #000" : "none",
               borderBottom: third ? "none" : "2px solid gray",
             }}
           >
             {isPrefilled ? (
-              <span className="text-fff">{initialGrid[index]}</span>
+              <span className="text-black">{initialGrid[index]}</span>
             ) : (
               <input
                 type="number"
@@ -47,7 +47,7 @@ export default function Grid3({
                 onChange={(e) => onCellChange(index, e.target.value)}
                 className={`text-center w-full h-full bg-transparent border-none outline-none text-2xl ${
                   value === correctValue
-                    ? "text-[#c3903f]"
+                    ? "text-[#034732]"
                     : value !== undefined
                     ? "text-red-500"
                     : ""
