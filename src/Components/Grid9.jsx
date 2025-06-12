@@ -19,7 +19,6 @@ export default function Grid9({
     structuredClone(unsolvedGrid)
   );
 
-  // Reset filledGrid when mode changes or a new unsolvedGrid comes in
   useEffect(() => {
     setFilledGrid(structuredClone(unsolvedGrid));
     setMistakesCount(0);
@@ -29,7 +28,6 @@ export default function Grid9({
     setIsActive(true);
   }, [unsolvedGrid, mode]);
 
-  // Timer effect
   useEffect(() => {
     let interval = null;
     if (isActive && !gameWon) {
@@ -40,7 +38,6 @@ export default function Grid9({
     return () => clearInterval(interval);
   }, [isActive, gameWon]);
 
-  // Game over effect
   useEffect(() => {
     if (mistakesCount === 3) {
       setIsActive(false);
@@ -48,7 +45,6 @@ export default function Grid9({
     }
   }, [mistakesCount]);
 
-  // Check win condition
   useEffect(() => {
     const checkWinCondition = () => {
       for (let i = 0; i < 9; i++) {
@@ -66,8 +62,7 @@ export default function Grid9({
 
     if (checkWinCondition()) {
       setIsActive(false);
-      setNewGame((prev) => !prev);
-      setGameWon(true);
+      setGameWon(true); // Only show win screen
     }
   }, [filledGrid, grid, unsolvedGrid]);
 
@@ -101,7 +96,7 @@ export default function Grid9({
     setIsActive(true);
     setOpened(false);
     setGameWon(false);
-    setFilledGrid(structuredClone(unsolvedGrid));
+    setNewGame((prev) => !prev);
   };
 
   return (

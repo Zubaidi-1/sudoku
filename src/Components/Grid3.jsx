@@ -1,63 +1,159 @@
-export default function Grid3({
-  placement,
-  solved,
-  values,
-  third,
-  mistakesCount,
-  setMistakesCount,
-  onCellChange,
-  initialGrid,
+import { useState, useEffect } from "react";
+import Grid3 from "./Grid3";
+import GameEnd from "./GameEnd";
+import GameWon from "./GameWon";
+
+export default function Grid9({
+  mode,
+  grid,
+  unsolvedGrid,
+  setUnsolvedGrid,
+  setNewGame,
 }) {
-  let border;
-  switch (placement) {
-    case "top":
-      border = "border-t-4 border-r-4";
-      break;
-    case "3x3":
-      border = "border-b-4 border-r-4";
-      break;
-    default:
-      border = "border-r-4";
-  }
+  const [mistakesCount, setMistakesCount] = useState(0);
+  const [opened, setOpened] = useState(false);
+  const [time, setTime] = useState(0);
+  const [isActive, setIsActive] = useState(true);
+  const [gameWon, setGameWon] = useState(false);
+  const [filledGrid, setFilledGrid] = useState(() =>
+    structuredClone(unsolvedGrid)
+  );
+
+  // Reset game state on new unsolvedGrid or mode change
+  useEffect(() => {
+    setFilledGrid(structuredClone(unsolvedGrid));
+    setMistakesCount(0);
+    setTime(0);
+    setOpened(false);
+    setGameWon(false);
+    setIsActive(true);
+  }, [unsolvedGrid, mode]);
+
+  // Timer
+  useEffect(() => {
+    let interval = null;
+    if (isActive && !gameWon) {
+      interval = setInterval(() => {
+        setTime((prevTime) => prevTime + 1);
+      }, 1000);
+    }
+    return () => clearInterval(interval);
+  }, [isActive, gameWon]);
+
+  // Game over
+  useEffect(() => {
+    if (mistakesCount === 3) {
+      setIsActive(false);
+      setOpened(true);
+    }
+  }, [mistakesCount]);
+
+  // Win check (do NOT call setNewGame here!)
+  useEffect(() => {
+    const checkWinCondition = () => {
+      for (let i = 0; i < 9; i++) {
+        for (let j = 0; j < 9; j++) {
+          if (unsolvedGrid[i][j] !== undefined) continue;
+          const userVal = filledGrid[i][j];
+          const correctVal = grid[i][j];
+          if (userVal === undefined || userVal !== correctVal) {
+            return false;
+          }
+        }
+      }
+      return true;
+    };
+
+    if (checkWinCondition()) {
+      setIsActive(false);
+      setGameWon(true); // ← Show win screen only
+    }
+  }, [filledGrid, grid, unsolvedGrid]);
+
+  const formatTime = () => {
+    const minutes = Math.floor(time / 60);
+    const seconds = time % 60;
+    return `${minutes.toString().padStart(2, "0")}:${seconds
+      .toString()
+      .padStart(2, "0")}`;
+  };
+
+  const handleCellChange = (rowIndex, colIndex, value) => {
+    const newFilledGrid = structuredClone(filledGrid);
+    const numValue = value === "" ? undefined : Number(value);
+
+    if (numValue !== undefined && (numValue < 1 || numValue > 9)) return;
+
+    if (newFilledGrid[rowIndex][colIndex] !== numValue) {
+      newFilledGrid[rowIndex][colIndex] = numValue;
+      setFilledGrid(newFilledGrid);
+
+      if (numValue !== undefined && numValue !== grid[rowIndex][colIndex]) {
+        setMistakesCount((prev) => prev + 1);
+      }
+    }
+  };
+
+  const handleRestart = () => {
+    setTime(0);
+    setMistakesCount(0);
+    setIsActive(true);
+    setOpened(false);
+    setGameWon(false);
+    setNewGame((prev) => !prev); // ← Only here
+  };
 
   return (
-    <div className={`flex ${border} border-[#ffe6a7] text-2xl`}>
-      {values.map((value, index) => {
-        const isPrefilled = initialGrid[index] !== undefined;
-        const correctValue = solved[index];
+    <div className="flex flex-col items-center">
+      <div className="flex justify-between w-full mb-4 px-4">
+        <div className="text-lg font-medium">
+          Time: <span className="font-bold">{formatTime()}</span>
+        </div>
+        <div className="text-lg font-medium">
+          Mistakes: <span className="font-bold">{mistakesCount}/3</span>
+        </div>
+      </div>
 
-        return (
-          <div
-            key={index}
-            className="border-r-2 border-b-2 border-gray-500 p-2 w-[60px] h-[60px] flex items-center justify-center transition hover:bg-black"
-            style={{
-              borderRight: [2, 5, 8].includes(index)
-                ? "none"
-                : "2px solid gray",
-              borderLeft: index % 3 === 0 ? "4px solid #ffe6a7" : "none",
-              borderBottom: third ? "none" : "2px solid gray",
-            }}
-          >
-            {isPrefilled ? (
-              <span className="text-fff">{initialGrid[index]}</span>
-            ) : (
-              <input
-                type="number"
-                value={value ?? ""}
-                onChange={(e) => onCellChange(index, e.target.value)}
-                className={`text-center w-full h-full bg-transparent border-none outline-none text-2xl ${
-                  value === correctValue
-                    ? "text-[#c3903f]"
-                    : value !== undefined
-                    ? "text-[#b91d2e]"
-                    : ""
-                }`}
-                maxLength={1}
-              />
-            )}
-          </div>
-        );
-      })}
+      {opened ? (
+        <GameEnd
+          setOpened={setOpened}
+          setMistakesCount={setMistakesCount}
+          setNewGame={setNewGame}
+          time={formatTime()}
+          onRestart={handleRestart}
+        />
+      ) : gameWon ? (
+        <GameWon
+          time={formatTime()}
+          mistakes={mistakesCount}
+          onRestart={handleRestart}
+        />
+      ) : (
+        <div className="grid grid-cols-1">
+          {unsolvedGrid.map((row, rowIndex) => {
+            const placement =
+              rowIndex === 0 ? "top" : (rowIndex + 1) % 3 === 0 ? "3x3" : "";
+            const isThirdRow = (rowIndex + 1) % 3 === 0;
+
+            return (
+              <div key={rowIndex}>
+                <Grid3
+                  setMistakesCount={setMistakesCount}
+                  mistakesCount={mistakesCount}
+                  placement={placement}
+                  solved={grid[rowIndex]}
+                  values={filledGrid[rowIndex]}
+                  third={isThirdRow}
+                  onCellChange={(colIndex, value) =>
+                    handleCellChange(rowIndex, colIndex, value)
+                  }
+                  initialGrid={unsolvedGrid[rowIndex]}
+                />
+              </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
